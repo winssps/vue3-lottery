@@ -4,30 +4,26 @@
 name: Node.js Package
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - master
 
+permissions:
+  contents: write                                # 设置权限，可写，也可以不用配置，v4版本新增的
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-and-deploy:                              # 其中一个任务的名称，ID
+    runs-on: ubuntu-latest                       # 这个任务运行所需的环境
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
-      - run: npm test
+      - name: Checkout                           # 第一步：获取源码
+        uses: actions/checkout@v3                # 使用的工具
 
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Install and Build                  # 第二步：下载依赖和构建
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy                           # 第三步：部署
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          folder: dist                         # 部署的目录
+          branch: deploy                       # 部署到哪个分支
